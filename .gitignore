@@ -1,0 +1,89 @@
+# See http://help.github.com/ignore-files/ for more about ignoring files.
+
+# compiled output
+
+/tmp
+/out-tsc
+# Only exists if Bazel was run
+/bazel-out
+**/build/*
+**/out/*
+**/dist/*
+
+# dependencies
+/node_modules
+
+# profiling files
+chrome-profiler-events.json
+speed-measure-plugin.json
+
+# IDEs and editors
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.iml
+
+# ECLIPSE
+/.classpath
+/.project
+/bin/
+
+# INTELLIJ
+/.idea/
+/.idea/liberies
+
+# NETBEANS
+faces-config.NavData
+
+# MAC OS
+.DS_Store
+Thumbs.db
+
+# IDE - VSCode
+.vscode/*
+.history/*
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+
+# Gradle
+**/.gradle/*
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+# Cache of project
+.gradletasknamecache
+
+# # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
+# gradle/wrapper/gradle-wrapper.properties
+
+# https://github.com/github/gitignore/blob/main/Maven.gitignore
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+# https://github.com/takari/maven-wrapper#usage-without-binary-jar
+.mvn/wrapper/maven-wrapper.jar
+
+# Eclipse m2e generated files
+# Eclipse Core
+.project
+# JDT-specific (Eclipse Java Development Tools)
+.classpath
