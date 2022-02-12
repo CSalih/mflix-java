@@ -76,12 +76,16 @@ public class CommentDao extends AbstractMFlixDao {
      * returns the resulting Comment object.
      */
     public Comment addComment(Comment comment) {
+        if (comment.getId() == null || null == comment.getOid()) {
+            throw new IncorrectDaoOperation("Comment must have a id and oid! Given id=%s oid=%s");
+        }
 
-        // TODO> Ticket - Update User reviews: implement the functionality that enables adding a new
-        // comment.
+        // TODO> Ticket - Update User reviews:
+        commentCollection.insertOne(comment);
+
         // TODO> Ticket - Handling Errors: Implement a try catch block to
         // handle a potential write exception when given a wrong commentId.
-        return null;
+        return comment;
     }
 
     /**
