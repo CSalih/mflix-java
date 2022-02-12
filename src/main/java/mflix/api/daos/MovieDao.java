@@ -265,9 +265,21 @@ public class MovieDao extends AbstractMFlixDao {
 
     /**
      * This method is the java implementation of the following mongo shell aggregation pipeline
-     * pipeline.aggregate([ {$match: {cast: {$in: ... }}}, {$sort: {tomatoes.viewer.numReviews: -1}},
-     * {$skip: ... }, {$limit: ... }, {$facet:{ runtime: {$bucket: ...}, rating: {$bucket: ...},
-     * movies: {$addFields: ...}, }} ])
+     *
+     * <pre> {@code
+     * pipeline.aggregate([
+     *  { $match: { cast: {$in: ... }}},
+     *  { $sort: { tomatoes.viewer.numReviews: -1 }},
+     *  { $skip: ... },
+     *  { $limit: ... },
+     *  { $facet: {
+     *      runtime: { $bucket: ... },
+     *      rating: { $bucket: ... },
+     *      movies: { $addFields: ... },
+     *      }
+     *  }
+     * ])}
+     * </pre>
      */
     public List<Document> getMoviesCastFaceted(int limit, int skip, String... cast) {
         List<Document> movies = new ArrayList<>();
@@ -280,13 +292,18 @@ public class MovieDao extends AbstractMFlixDao {
         // Using a LinkedList to ensure insertion order
         List<Bson> pipeline = new LinkedList<>();
 
-        // TODO > Ticket: Faceted Search - build the aggregation pipeline by adding all stages in the
-        // correct order
         // Your job is to order the stages correctly in the pipeline.
         // Starting with the `matchStage` add the remaining stages.
         pipeline.add(matchStage);
+        pipeline.add(sortStage);
+        pipeline.add(skipStage);
+        pipeline.add(limitStage);
+        pipeline.add(facetStage);
 
-        moviesCollection.aggregate(pipeline).iterator().forEachRemaining(movies::add);
+        moviesCollection
+                .aggregate(pipeline)
+                .iterator()
+                .forEachRemaining(movies::add);
         return movies;
     }
 
