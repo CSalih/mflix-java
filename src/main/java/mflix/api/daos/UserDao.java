@@ -77,6 +77,8 @@ public class UserDao extends AbstractMFlixDao {
      * @return true if successful
      */
     public boolean createUserSession(String userId, String jwt) {
+        // TODO: workaround to avoid duplicated key error
+        sessionsCollection.deleteOne(Filters.eq("user_id", userId));
         sessionsCollection.insertOne(new Session(userId, jwt));
         return true;
         //TODO > Ticket: Handling Errors - implement a safeguard against
