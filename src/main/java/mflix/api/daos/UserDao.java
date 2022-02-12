@@ -77,6 +77,8 @@ public class UserDao extends AbstractMFlixDao {
      * @return true if successful
      */
     public boolean createUserSession(String userId, String jwt) {
+        // TODO: workaround to avoid duplicated key error
+        sessionsCollection.deleteOne(Filters.eq("user_id", userId));
         sessionsCollection.insertOne(new Session(userId, jwt));
         return true;
         //TODO > Ticket: Handling Errors - implement a safeguard against
@@ -140,10 +142,19 @@ public class UserDao extends AbstractMFlixDao {
      * @return User object that just been updated.
      */
     public boolean updateUserPreferences(String email, Map<String, ?> userPreferences) {
-        //TODO> Ticket: User Preferences - implement the method that allows for user preferences to
-        // be updated.
+        if (null == userPreferences) {
+            throw new IncorrectDaoOperation(
+                "userPreferences must not be null! Given userPreferences=null"
+            );
+        }
+
+        User updatedUser = usersCollection.findOneAndUpdate(
+                Filters.eq("email", email),
+                Updates.set("preferences", userPreferences)
+        );
+
         //TODO > Ticket: Handling Errors - make this method more robust by
         // handling potential exceptions when updating an entry.
-        return false;
+        return updatedUser != null;
     }
 }
