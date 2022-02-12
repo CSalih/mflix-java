@@ -26,8 +26,10 @@ import org.springframework.stereotype.Component;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Filter;
 
 import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
@@ -76,12 +78,15 @@ public class CommentDao extends AbstractMFlixDao {
      * returns the resulting Comment object.
      */
     public Comment addComment(Comment comment) {
+        if (comment.getId() == null || comment.getOid() == null) {
+            throw new IncorrectDaoOperation("Comment must have a id and oid! Given id=%s oid=%s");
+        }
 
-        // TODO> Ticket - Update User reviews: implement the functionality that enables adding a new
-        // comment.
+        commentCollection.insertOne(comment);
+
         // TODO> Ticket - Handling Errors: Implement a try catch block to
         // handle a potential write exception when given a wrong commentId.
-        return null;
+        return comment;
     }
 
     /**
@@ -98,12 +103,19 @@ public class CommentDao extends AbstractMFlixDao {
      * @return true if successfully updates the comment text.
      */
     public boolean updateComment(String commentId, String text, String email) {
+        Bson filter = Filters.and(Arrays.asList(
+                Filters.eq("_id", new ObjectId(commentId)),
+                Filters.eq("email", email)
+        ));
+        Bson update = Updates.combine(Arrays.asList(
+                Updates.set("text", text),
+                Updates.set("email", email)
+        ));
+        UpdateResult updateResult = commentCollection.updateOne(filter, update);
 
-        // TODO> Ticket - Update User reviews: implement the functionality that enables updating an
-        // user own comments
         // TODO> Ticket - Handling Errors: Implement a try catch block to
         // handle a potential write exception when given a wrong commentId.
-        return false;
+        return updateResult.getModifiedCount() >= 1;
     }
 
     /**
