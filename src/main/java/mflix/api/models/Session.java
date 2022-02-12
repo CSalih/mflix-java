@@ -13,6 +13,11 @@ public class Session {
         super();
     }
 
+    public Session(String userId, String jwt) {
+        this.userId = userId;
+        this.jwt = jwt;
+    }
+
     public String getUserId() {
         return userId;
     }
