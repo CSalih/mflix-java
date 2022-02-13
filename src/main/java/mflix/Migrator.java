@@ -7,13 +7,17 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.*;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.bson.types.ObjectId;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public class Migrator {
 
@@ -34,12 +38,12 @@ public class Migrator {
 
             int rating = 0;
             if (!"".equals(imdbRating)) {
-                rating = Integer.valueOf(imdbRating);
+                rating = Integer.parseInt(imdbRating);
             }
-            // TODO> Ticket: Migration - define the UpdateOneModel object for
-            // the rating type cleanup.
-            return new UpdateOneModel<Document>(new Document(), new
-            Document());
+            Bson filter = Filters.eq("_id", doc.getObjectId("_id"));
+            Bson update = Updates.set("imdb.rating", rating);
+
+            return new UpdateOneModel<>(filter, update);
         } catch (NumberFormatException e) {
             System.out.println(
                     MessageFormat.format(
@@ -82,23 +86,32 @@ public class Migrator {
      *
      * @param args is a set of system arguments that can be ignored.
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         System.out.println("Dataset cleanup migration");
 
         // set your MongoDB Cluster connection string
-        // TODO> Ticket: Migration - set the cluster connection string.
+        Properties properties = new Properties();
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+
         String mongoUri = "";
+        try (InputStream is = loader.getResourceAsStream("application.properties")) {
+            properties.load(is);
+            mongoUri = properties.getProperty("spring.mongodb.uri");
+        }
+
+        if (mongoUri.isEmpty()) {
+            System.out.println(
+                    "mongoUri is empty but required! Please add 'spring.mongodb.uri' in your 'application.properties'"
+            );
+            return;
+        }
 
         // instantiate database and collection objects
         MongoDatabase mflix = MongoClients.create(mongoUri).getDatabase("sample_mflix");
         MongoCollection<Document> movies = mflix.getCollection("movies");
-        Bson dateStringFilter = null;
-        String datePattern = "";
-        // TODO> Ticket: Migration - create a query filter that finds all
-        // documents that are required to be updated and the correct date
-        // format pattern
-        Document queryFilter = new Document();
+        Bson dateStringFilter = Filters.type("lastupdated", "string");
+        String datePattern = "yyyy-MM-dd HH:mm:ss";
         SimpleDateFormat dateFormat = new SimpleDateFormat(datePattern);
 
         // create list of bulkWrites to be applied.
@@ -114,9 +127,7 @@ public class Migrator {
             }
         }
 
-        // TODO> Ticket: Migration - create a query filter that finds
-        // documents where `imdb.rating` is of type string
-        Bson ratingStringFilter = new Document();
+        Bson ratingStringFilter = Filters.type("imdb.rating", "string");
         for (Document doc : movies.find(ratingStringFilter)) {
             // Apply "imdb.rating" string to number conversion
             WriteModel<Document> updateRating = transformRating(doc);
@@ -126,8 +137,7 @@ public class Migrator {
         }
 
         // execute the bulk update
-        // TODO> Ticket: Migration - set the bulkWrite options
-        BulkWriteOptions bulkWriteOptions = null;
+        BulkWriteOptions bulkWriteOptions = new BulkWriteOptions().ordered(false);
         if (bulkWrites.isEmpty()) {
             System.out.println("Nothing to update!");
             System.exit(0);
