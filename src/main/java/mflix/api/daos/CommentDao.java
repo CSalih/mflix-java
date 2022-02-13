@@ -75,14 +75,15 @@ public class CommentDao extends AbstractMFlixDao {
      * returns the resulting Comment object.
      */
     public Comment addComment(Comment comment) {
-        if (comment.getId() == null || comment.getOid() == null) {
-            throw new IncorrectDaoOperation("Comment must have a id and oid! Given id=%s oid=%s");
+        try {
+            if (comment.getId() == null || comment.getOid() == null) {
+                throw new IncorrectDaoOperation("Comment must have a id and oid! Given id=%s oid=%s");
+            }
+
+            commentCollection.insertOne(comment);
+        } catch (MongoWriteException e) {
+            throw new IncorrectDaoOperation("Adding a comment failed! Message: " + e.getMessage());
         }
-
-        commentCollection.insertOne(comment);
-
-        // TODO> Ticket - Handling Errors: Implement a try catch block to
-        // handle a potential write exception when given a wrong commentId.
         return comment;
     }
 
@@ -100,19 +101,22 @@ public class CommentDao extends AbstractMFlixDao {
      * @return true if successfully updates the comment text.
      */
     public boolean updateComment(String commentId, String text, String email) {
-        Bson filter = Filters.and(Arrays.asList(
-                Filters.eq("_id", new ObjectId(commentId)),
-                Filters.eq("email", email)
-        ));
-        Bson update = Updates.combine(Arrays.asList(
-                Updates.set("text", text),
-                Updates.set("email", email)
-        ));
-        UpdateResult updateResult = commentCollection.updateOne(filter, update);
+        try {
+            Bson filter = Filters.and(Arrays.asList(
+                    Filters.eq("_id", new ObjectId(commentId)),
+                    Filters.eq("email", email)
+            ));
+            Bson update = Updates.combine(Arrays.asList(
+                    Updates.set("text", text),
+                    Updates.set("email", email)
+            ));
+            UpdateResult updateResult = commentCollection.updateOne(filter, update);
 
-        // TODO> Ticket - Handling Errors: Implement a try catch block to
-        // handle a potential write exception when given a wrong commentId.
-        return updateResult.getModifiedCount() >= 1;
+            return updateResult.getModifiedCount() >= 1;
+        } catch (MongoWriteException e) {
+            log.error("Updating a comment failed! Message: " + e.getMessage());
+            return false;
+        }
     }
 
     /**
@@ -123,15 +127,18 @@ public class CommentDao extends AbstractMFlixDao {
      * @return true if successful deletes the comment.
      */
     public boolean deleteComment(String commentId, String email) {
-        Bson filter = Filters.and(Arrays.asList(
-                Filters.eq("_id", new ObjectId(commentId)),
-                Filters.eq("email", email)
-        ));
-        DeleteResult deleteResult = commentCollection.deleteOne(filter);
+        try {
+            Bson filter = Filters.and(Arrays.asList(
+                    Filters.eq("_id", new ObjectId(commentId)),
+                    Filters.eq("email", email)
+            ));
+            DeleteResult deleteResult = commentCollection.deleteOne(filter);
 
-        // TODO> Ticket Handling Errors - Implement a try catch block to
-        // handle a potential write exception when given a wrong commentId.
-        return deleteResult.getDeletedCount() >= 1;
+            return deleteResult.getDeletedCount() >= 1;
+        } catch (MongoWriteException e) {
+            log.error("Deleting a comment failed! Message: " + e.getMessage());
+            return false;
+        }
     }
 
     /**
